@@ -1,0 +1,142 @@
+---
+title: "Pré-alocação de Memória em R"
+format:
+  revealjs:
+    theme: theme.scss
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    #logo:
+    footer: Davi Augusto, Eduardo Garcez, Gabriel Netto, Gustavo Ubatuba e João Arend.
+code-link: true
+execute:
+  echo: true
+  freeze: auto
+---
+
+```{r libs, include = FALSE}
+
+library(lobstr)
+library(microbenchmark)
+library(ggplot2)
+```
+## Introdução
+
+> **O que é pré-alocação de memória?**
+>
+> > Dado que precisaremos de um tamanho limitado e conhecido de memória para uma execução de um programa, podemos via _software_ "solicitar" esse espaço ao _hardware_.
+>
+> **Por que é importante?**
+>
+>> Gera menor tempo de execução e menor cu$to.
+
+## Exemplo sem Pré-alocação
+```{r}
+out <- c()
+for (i in 1:4) {
+  out <- c(out, i)
+  print(out)}
+```
+
+```{r}
+out <- c()
+for (i in 1:4) {
+  out <- c(out, i)
+  cat('It', i, '| memory address:', lobstr::obj_addr(out), '\n')}
+```
+
+## Exemplo com Pré-alocação
+```{r}
+out <- rep(NA, 4)
+for (i in 1:5) {
+  out[i] <- i
+  cat('It', i, '| memory address:', lobstr::obj_addr(out), '\n')}
+```
+
+**Obs:** Nesse caso alocamos um vetor de 4 espaços e iteramos 5 vezes.
+Em R, esse objeto tem parte pré-alocada e parte dinâmica.
+
+## Tempo
+```{r}
+n <- 10000
+
+for_loop_timing <- microbenchmark(
+
+  'Dinâmica' = {
+    out <- c()
+    for (i in 1:n) { out <- c(out, i) }
+  },
+  'Pré-alocada' = {
+    out <- rep(NA, n)
+    for (i in 1:n) { out[i] <- i }
+  },
+  times = 100
+)
+
+```
+
+## Tempo
+```{r, echo = FALSE}
+
+for_medians <- summary(for_loop_timing, unit = 'ms')$median
+for_loop_timing$time_ms <- for_loop_timing$time / 1000000
+
+ggplot(for_loop_timing, aes(x = expr, y = time_ms, color = expr)) +
+  geom_jitter(width = .1) +
+  labs(x = '', y = 'Tempo (ms)',
+       title = 'Tempo para gerar um  vetor com 10000 elementos.',
+       subtitle = 'Mensurado 100 para cada método',
+       ) +
+  ylim(0, max(for_loop_timing$time_ms) * 1.25) +
+  geom_hline(yintercept = for_medians, color = c('salmon', 'cornflowerblue')) +
+  theme_minimal() +
+  theme(legend.position = 'none') +
+  scale_color_manual(values = c('salmon', 'cornflowerblue'))
+
+```
+
+## Funções do R padrão
+Funções `apply` em R (`apply`, `lapply`, `sapply`, `vapply`...) internamente pré-alocam memória , por isso são geralmente tratadas como "mais eficientes" que usar `for` ou `while`.
+
+
+```{r}
+#| code-line-numbers: "11,12,13"
+
+for_loop_timing <- microbenchmark(
+
+  'Dinâmica' = {
+    out <- c()
+    for (i in 1:n) { out <- c(out, i) }
+  },
+  'Pré-alocada' = {
+    out <- rep(NA, n)
+    for (i in 1:n) { out[i] <- i }
+  },
+  'Apply' = {
+    out <- lapply(1:n, function(x) x)
+  },
+
+  times = 100
+)
+
+```
+
+## Adicionando Apply na comparação
+```{r, echo = FALSE}
+
+for_medians <- summary(for_loop_timing, unit = 'ms')$median
+for_loop_timing$time_ms <- for_loop_timing$time / 1000000
+
+ggplot(for_loop_timing, aes(x = expr, y = time_ms, color = expr)) +
+  geom_jitter(width = .1) +
+  labs(x = '', y = 'Tempo (ms)',
+       title = 'Tempo para gerar um  vetor com 10000 elementos.',
+       subtitle = 'Mensurado 100 para cada método',
+       ) +
+  ylim(0, max(for_loop_timing$time_ms) * 1.25) +
+  geom_hline(yintercept = for_medians, color = c('salmon', 'cornflowerblue', 'yellowgreen')) +
+  theme_minimal() +
+  theme(legend.position = 'none') +
+  scale_color_manual(values = c('salmon', 'cornflowerblue', 'yellowgreen'))
+```
+

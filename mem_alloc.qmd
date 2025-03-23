@@ -96,14 +96,12 @@ ggplot(for_loop_timing, aes(x = expr, y = time_ms, color = expr)) +
 ```
 
 ## Funções do R padrão
-Funções `apply` em R (`apply`, `lapply`, `sapply`, `vapply`...) internamente pré-alocam memória , por isso são geralmente tratadas como "mais eficientes" que usar `for` ou `while`.
-
+Funções `apply` em R (`lapply`, `sapply`, ...) internamente pré-alocam memória, por isso são tratadas como "mais eficientes" que usar `for` ou `while`.
 
 ```{r}
-#| code-line-numbers: "11,12,13"
+#| code-line-numbers: "10,11,12"
 
 for_loop_timing <- microbenchmark(
-
   'Dinâmica' = {
     out <- c()
     for (i in 1:n) { out <- c(out, i) }
@@ -115,7 +113,6 @@ for_loop_timing <- microbenchmark(
   'Apply' = {
     out <- lapply(1:n, function(x) x)
   },
-
   times = 100
 )
 
@@ -154,7 +151,7 @@ timing <- microbenchmark(
     for (i in 1:n) {
       df <- rbind(df, data.frame(x = i, y = i^2))
     }
-    df  
+    df
   },
   "Pré-alocado" = {
     df <- data.frame(x = numeric(n), y = numeric(n))
@@ -162,7 +159,7 @@ timing <- microbenchmark(
       df$x[i] <- i
       df$y[i] <- i^2
     }
-    df  
+    df
   },
   times = 100
 )
@@ -201,7 +198,7 @@ A solução é pré-alocar o data frame com o tamanho necessário antes de preen
 - Data frame criado uma única vez, com todas as linhas já alocadas
 - Cada iteração apenas atualiza valores nas posições existentes
 - Complexidade: $O(n)$ (linear), sem cópias ou realocações extras
-  
+
 ## Visualização da diferença!
 
 ```{r, echo = FALSE}
@@ -211,8 +208,8 @@ timing$time_ms <- timing$time / 1000000
 
 ggplot(timing, aes(x = expr, y = time_ms, color = expr)) +
   geom_jitter(width = 0.2, alpha = 0.7, size = 3) +
-  geom_hline(yintercept = timing_medians, 
-             color = c("salmon", "cornflowerblue"), 
+  geom_hline(yintercept = timing_medians,
+             color = c("salmon", "cornflowerblue"),
              linetype = "dashed", size = 1) +
   labs(x = "", y = "Tempo (ms)",
        title = "Comparação de Performance: Alocação de Memória em R",
@@ -226,6 +223,6 @@ ggplot(timing, aes(x = expr, y = time_ms, color = expr)) +
     axis.text.x = element_text(face = "bold", size = 12)
   ) +
   scale_color_manual(values = c("salmon", "cornflowerblue")) +
-  
+
   ylim(0, max(timing$time_ms) * 1.1)
 ```

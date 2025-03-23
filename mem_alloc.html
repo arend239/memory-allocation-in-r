@@ -230,10 +230,10 @@
 <span id="cb3-3"><a href=""></a>  out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, i)</span>
 <span id="cb3-4"><a href=""></a>  <span class="fu">cat</span>(<span class="st">'It'</span>, i, <span class="st">'| memory address:'</span>, lobstr<span class="sc">::</span><span class="fu">obj_addr</span>(out), <span class="st">'</span><span class="sc">\n</span><span class="st">'</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>It 1 | memory address: 0x60697ac04798 
-It 2 | memory address: 0x60697ac4e2e8 
-It 3 | memory address: 0x60697a7e6078 
-It 4 | memory address: 0x60697a7e5f38 </code></pre>
+<pre><code>It 1 | memory address: 0x637c4b718b98 
+It 2 | memory address: 0x637c4b717ee8 
+It 3 | memory address: 0x637c4b634bb8 
+It 4 | memory address: 0x637c4b634a78 </code></pre>
 </div>
 </div>
 </section>
@@ -245,11 +245,11 @@ It 4 | memory address: 0x60697a7e5f38 </code></pre>
 <span id="cb5-3"><a href=""></a>  out[i] <span class="ot">&lt;-</span> i</span>
 <span id="cb5-4"><a href=""></a>  <span class="fu">cat</span>(<span class="st">'It'</span>, i, <span class="st">'| memory address:'</span>, lobstr<span class="sc">::</span><span class="fu">obj_addr</span>(out), <span class="st">'</span><span class="sc">\n</span><span class="st">'</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>It 1 | memory address: 0x606979293e68 
-It 2 | memory address: 0x606979293e68 
-It 3 | memory address: 0x606979293e68 
-It 4 | memory address: 0x606979293e68 
-It 5 | memory address: 0x60697aa21928 </code></pre>
+<pre><code>It 1 | memory address: 0x637c4be5cc98 
+It 2 | memory address: 0x637c4be5cc98 
+It 3 | memory address: 0x637c4be5cc98 
+It 4 | memory address: 0x637c4be5cc98 
+It 5 | memory address: 0x637c4b168f48 </code></pre>
 </div>
 </div>
 <p><strong>Obs:</strong> Nesse caso alocamos um vetor de 4 espaços e iteramos 5 vezes. Em R, esse objeto tem parte pré-alocada e parte dinâmica.</p>
@@ -279,31 +279,82 @@ It 5 | memory address: 0x60697aa21928 </code></pre>
 <img data-src="mem_alloc_files/figure-revealjs/unnamed-chunk-5-1.png" width="960" class="r-stretch"></section>
 <section id="funções-do-r-padrão" class="slide level2">
 <h2>Funções do R padrão</h2>
-<p>Funções <code>apply</code> em R (<code>apply</code>, <code>lapply</code>, <code>sapply</code>, <code>vapply</code>…) internamente pré-alocam memória , por isso são geralmente tratadas como “mais eficientes” que usar <code>for</code> ou <code>while</code>.</p>
+<p>Funções <code>apply</code> em R (<code>lapply</code>, <code>sapply</code>, …) internamente pré-alocam memória, por isso são tratadas como “mais eficientes” que usar <code>for</code> ou <code>while</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8" data-code-line-numbers="11,12,13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>for_loop_timing <span class="ot">&lt;-</span> <span class="fu">microbenchmark</span>(</span>
-<span id="cb8-2"><a href=""></a></span>
-<span id="cb8-3"><a href=""></a>  <span class="st">'Dinâmica'</span> <span class="ot">=</span> {</span>
-<span id="cb8-4"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
-<span id="cb8-5"><a href=""></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) { out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, i) }</span>
-<span id="cb8-6"><a href=""></a>  },</span>
-<span id="cb8-7"><a href=""></a>  <span class="st">'Pré-alocada'</span> <span class="ot">=</span> {</span>
-<span id="cb8-8"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, n)</span>
-<span id="cb8-9"><a href=""></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) { out[i] <span class="ot">&lt;-</span> i }</span>
-<span id="cb8-10"><a href=""></a>  },</span>
-<span id="cb8-11"><a href=""></a>  <span class="st">'Apply'</span> <span class="ot">=</span> {</span>
-<span id="cb8-12"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(x) x)</span>
-<span id="cb8-13"><a href=""></a>  },</span>
-<span id="cb8-14"><a href=""></a></span>
-<span id="cb8-15"><a href=""></a>  <span class="at">times =</span> <span class="dv">100</span></span>
-<span id="cb8-16"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8" data-code-line-numbers="10,11,12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>for_loop_timing <span class="ot">&lt;-</span> <span class="fu">microbenchmark</span>(</span>
+<span id="cb8-2"><a href=""></a>  <span class="st">'Dinâmica'</span> <span class="ot">=</span> {</span>
+<span id="cb8-3"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb8-4"><a href=""></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) { out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, i) }</span>
+<span id="cb8-5"><a href=""></a>  },</span>
+<span id="cb8-6"><a href=""></a>  <span class="st">'Pré-alocada'</span> <span class="ot">=</span> {</span>
+<span id="cb8-7"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, n)</span>
+<span id="cb8-8"><a href=""></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) { out[i] <span class="ot">&lt;-</span> i }</span>
+<span id="cb8-9"><a href=""></a>  },</span>
+<span id="cb8-10"><a href=""></a>  <span class="st">'Apply'</span> <span class="ot">=</span> {</span>
+<span id="cb8-11"><a href=""></a>    out <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="cf">function</span>(x) x)</span>
+<span id="cb8-12"><a href=""></a>  },</span>
+<span id="cb8-13"><a href=""></a>  <span class="at">times =</span> <span class="dv">100</span></span>
+<span id="cb8-14"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="adicionando-apply-na-comparação" class="slide level2">
 <h2>Adicionando Apply na comparação</h2>
 
-
 <img data-src="mem_alloc_files/figure-revealjs/unnamed-chunk-7-1.png" width="960" class="r-stretch"></section>
+<section id="a-mesma-coisa-com-dataframes" class="slide level2">
+<h2>A mesma coisa com Dataframes!</h2>
+<p>Vamos ver a diferença entre pré-alocar vs rbind().</p>
+<p>É comum ao trabalharmos com dt usarmos rbind() dentro de loops para adicionar linhas, parece intuitivo, mas é “ineficiente”!</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Unit: milliseconds
+             expr       min       lq       mean    median        uq       max
+ Dinâmico (rbind) 801.89638 850.4524 1025.83904 913.91436 969.58533 2751.0719
+      Pré-alocado  29.00733  33.9281   43.74776  36.52246  42.37879  220.4285
+ neval
+   100
+   100</code></pre>
+</div>
+</div>
+</section>
+<section id="diferença-rbind" class="slide level2">
+<h2>Diferença: Rbind()</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb10-2"><a href=""></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb10-3"><a href=""></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb10-4"><a href=""></a>  new_row <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> i, <span class="at">y =</span> i<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb10-5"><a href=""></a>  df <span class="ot">&lt;-</span> <span class="fu">rbind</span>(df, new_row)</span>
+<span id="cb10-6"><a href=""></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A cada iteração, rbind() cria uma cópia do dataframe e adiciona uma linha.</p>
+<ul>
+<li>Cada operação consome tempo e memória</li>
+<li>Complexidade: <span class="math inline">\(O(n^2)\)</span> - crescimento quadrático do tempo de execução</li>
+</ul>
+</section>
+<section id="diferença-pré-alocar" class="slide level2">
+<h2>Diferença: Pré-Alocar</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb11-2"><a href=""></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">numeric</span>(n), <span class="at">y =</span> <span class="fu">numeric</span>(n))  <span class="co">#Pré-alocação</span></span>
+<span id="cb11-3"><a href=""></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb11-4"><a href=""></a>  df<span class="sc">$</span>x[i] <span class="ot">&lt;-</span> i</span>
+<span id="cb11-5"><a href=""></a>  df<span class="sc">$</span>y[i] <span class="ot">&lt;-</span> i<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb11-6"><a href=""></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A solução é pré-alocar o data frame com o tamanho necessário antes de preenchê-lo:</p>
+<ul>
+<li>Data frame criado uma única vez, com todas as linhas já alocadas</li>
+<li>Cada iteração apenas atualiza valores nas posições existentes</li>
+<li>Complexidade: <span class="math inline">\(O(n)\)</span> (linear), sem cópias ou realocações extras</li>
+</ul>
+</section>
+<section id="visualização-da-diferença" class="slide level2">
+<h2>Visualização da diferença!</h2>
+
+
+<img data-src="mem_alloc_files/figure-revealjs/unnamed-chunk-11-1.png" width="960" class="r-stretch"></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

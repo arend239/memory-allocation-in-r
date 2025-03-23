@@ -140,3 +140,92 @@ ggplot(for_loop_timing, aes(x = expr, y = time_ms, color = expr)) +
   scale_color_manual(values = c('salmon', 'cornflowerblue', 'yellowgreen'))
 ```
 
+## A mesma coisa com Dataframes!
+Vamos ver a diferença entre pré-alocar vs rbind().
+
+É comum ao trabalharmos com dt usarmos rbind() dentro de loops para adicionar linhas, parece intuitivo, mas é "ineficiente"!
+
+```{r, echo = FALSE}
+n <- 1000
+
+timing <- microbenchmark(
+  "Dinâmico (rbind)" = {
+    df <- data.frame()
+    for (i in 1:n) {
+      df <- rbind(df, data.frame(x = i, y = i^2))
+    }
+    df  
+  },
+  "Pré-alocado" = {
+    df <- data.frame(x = numeric(n), y = numeric(n))
+    for (i in 1:n) {
+      df$x[i] <- i
+      df$y[i] <- i^2
+    }
+    df  
+  },
+  times = 100
+)
+
+print(timing)
+```
+
+
+## Diferença: Rbind()
+```{r}
+n <- 1000
+df <- data.frame()
+for (i in 1:n) {
+  new_row <- data.frame(x = i, y = i^2)
+  df <- rbind(df, new_row)
+}
+```
+
+A cada iteração, rbind() cria uma cópia do dataframe e adiciona uma linha.
+
+- Cada operação consome tempo e memória
+- Complexidade: $O(n^2)$ - crescimento quadrático do tempo de execução
+
+## Diferença: Pré-Alocar
+```{r}
+n <- 1000
+df <- data.frame(x = numeric(n), y = numeric(n))  #Pré-alocação
+for (i in 1:n) {
+  df$x[i] <- i
+  df$y[i] <- i^2
+}
+```
+
+A solução é pré-alocar o data frame com o tamanho necessário antes de preenchê-lo:
+
+- Data frame criado uma única vez, com todas as linhas já alocadas
+- Cada iteração apenas atualiza valores nas posições existentes
+- Complexidade: $O(n)$ (linear), sem cópias ou realocações extras
+  
+## Visualização da diferença!
+
+```{r, echo = FALSE}
+
+timing_medians <- summary(timing, unit = 'ms')$median
+timing$time_ms <- timing$time / 1000000
+
+ggplot(timing, aes(x = expr, y = time_ms, color = expr)) +
+  geom_jitter(width = 0.2, alpha = 0.7, size = 3) +
+  geom_hline(yintercept = timing_medians, 
+             color = c("salmon", "cornflowerblue"), 
+             linetype = "dashed", size = 1) +
+  labs(x = "", y = "Tempo (ms)",
+       title = "Comparação de Performance: Alocação de Memória em R",
+       subtitle = paste("Criação de dataframe com", n, "linhas, mensurado", length(timing$time)/2, "vezes para cada método")) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10),
+    axis.title.y = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold", size = 12)
+  ) +
+  scale_color_manual(values = c("salmon", "cornflowerblue")) +
+  
+  ylim(0, max(timing$time_ms) * 1.1)
+```
